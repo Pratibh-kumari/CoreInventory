@@ -10,7 +10,7 @@ from app.core.database import sql1_db
 from app.core.dependencies import get_current_user, require_role
 from app.core.config import settings
 from app.core.qr_signing import sign_asset_id, build_qr_payload
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import math
 import os
@@ -79,8 +79,8 @@ def _batch_row_to_response(batch: dict, assets: List[dict]) -> BatchResponse:
         transporter_id=batch.get("transporter_id"),
         destination=batch.get("destination", ""),
         status=raw_status,
-        expected_delivery=batch.get("expected_delivery") or datetime.utcnow().isoformat(),
-        created_at=batch.get("created_at") or datetime.utcnow().isoformat(),
+        expected_delivery=batch.get("expected_delivery") or datetime.now(timezone.utc).isoformat(),
+        created_at=batch.get("created_at") or datetime.now(timezone.utc).isoformat(),
         assets=assets,
         driver_name=batch.get("driver_name"),
         qr_generated=batch.get("qr_generated", False),
@@ -254,7 +254,7 @@ async def create_batch(
             destination=batch_data.destination,
             status="PENDING",
             expected_delivery=batch_data.expected_delivery,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             assets=batch_assets,
             qr_generated=qr_generated_all,
             created_by=current_user["user_id"],
@@ -612,7 +612,7 @@ async def log_batch_event(batch_id: str, event_type: str, user_id: str):
             "batch_id": batch_id,
             "user_id": user_id,
             "event_type": event_type,
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
         response = sql1_db.get_client().table("events").insert(event_data).execute()
         if response.data:
@@ -632,7 +632,7 @@ def create_alert(alert_type: str, severity: str, message: str, batch_id: str):
             "severity": severity,
             "message": message,
             "batch_id": batch_id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "is_dismissed": False,
         }
         try:
@@ -640,7 +640,7 @@ def create_alert(alert_type: str, severity: str, message: str, batch_id: str):
         except Exception:
             sql1_db.get_client().table("alerts").insert({
                 "type": alert_type, "severity": severity, "message": message,
-                "batch_id": batch_id, "timestamp": datetime.utcnow().isoformat(), "dismissed": False,
+                "batch_id": batch_id, "timestamp": datetime.now(timezone.utc).isoformat(), "dismissed": False,
             }).execute()
     except Exception as e:
         print(f"Failed to create alert: {str(e)}")

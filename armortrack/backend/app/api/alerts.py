@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models.schemas import UserRole
 from app.core.database import sql1_db
 from app.core.dependencies import require_role
@@ -48,7 +48,7 @@ async def get_active_alerts(current_user: dict = Depends(require_role([UserRole.
                 "message": alert.get("message", "Alert"),
                 "batch_id": alert.get("batch_id"),
                 "asset_id": alert.get("asset_id"),
-                "timestamp": alert.get("created_at") or alert.get("timestamp") or datetime.utcnow().isoformat(),
+                "timestamp": alert.get("created_at") or alert.get("timestamp") or datetime.now(timezone.utc).isoformat(),
                 "dismissed": alert.get("is_dismissed", alert.get("dismissed", False)),
             })
         

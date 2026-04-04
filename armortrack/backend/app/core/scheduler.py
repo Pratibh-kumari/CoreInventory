@@ -1,6 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.core.database import sql1_db
 from app.core.config import settings
 
@@ -10,7 +10,7 @@ scheduler = BackgroundScheduler()
 def check_maintenance_due():
     """Daily check for assets due for maintenance"""
     try:
-        print(f"[{datetime.utcnow()}] Running maintenance check...")
+        print(f"[{datetime.now(timezone.utc)}] Running maintenance check...")
         
         assets = sql1_db.get_client().table("assets").select("*").execute()
         
@@ -21,7 +21,7 @@ def check_maintenance_due():
             if last_serviced:
                 last_serviced_dt = datetime.fromisoformat(last_serviced.replace('Z', '+00:00'))
                 next_service = last_serviced_dt + timedelta(days=interval_days)
-                now_ref = datetime.now(last_serviced_dt.tzinfo) if last_serviced_dt.tzinfo else datetime.utcnow()
+                now_ref = datetime.now(last_serviced_dt.tzinfo) if last_serviced_dt.tzinfo else datetime.now(timezone.utc)
                 days_until_due = (next_service - now_ref).days
                 
                 if days_until_due <= settings.MAINTENANCE_WARNING_DAYS:
@@ -32,7 +32,7 @@ def check_maintenance_due():
                         "severity": severity,
                         "message": f"Asset {asset['asset_name']} ({asset['id']}) {'OVERDUE' if days_until_due < 0 else 'due soon'} for maintenance",
                         "asset_id": asset["id"],
-                        "created_at": datetime.utcnow().isoformat(),
+                        "created_at": datetime.now(timezone.utc).isoformat(),
                         "is_dismissed": False
                     }
                     try:
@@ -43,13 +43,13 @@ def check_maintenance_due():
                             "severity": severity,
                             "message": alert["message"],
                             "asset_id": asset["id"],
-                            "timestamp": datetime.utcnow().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                             "dismissed": False,
                         }
                         sql1_db.get_client().table("alerts").insert(legacy_alert).execute()
                     print(f"  Alert created for asset: {asset['id']}")
         
-        print(f"[{datetime.utcnow()}] Maintenance check completed")
+        print(f"[{datetime.now(timezone.utc)}] Maintenance check completed")
     
     except Exception as e:
         print(f"Maintenance check failed: {str(e)}")
@@ -79,7 +79,7 @@ def check_active_alerts():
             if latest_gps.data:
                 last_update_raw = latest_gps.data[0].get("created_at", latest_gps.data[0].get("timestamp"))
                 last_update = datetime.fromisoformat(str(last_update_raw).replace('Z', '+00:00'))
-                now_ref = datetime.now(last_update.tzinfo) if last_update.tzinfo else datetime.utcnow()
+                now_ref = datetime.now(last_update.tzinfo) if last_update.tzinfo else datetime.now(timezone.utc)
                 time_since_update = (now_ref - last_update).total_seconds() / 60
                 
                 if time_since_update > settings.GPS_SIGNAL_LOSS_MINUTES:
@@ -105,7 +105,7 @@ def check_active_alerts():
                             "severity": "ALERT",
                             "message": f"GPS signal lost for batch {batch['id']} for over {settings.GPS_SIGNAL_LOSS_MINUTES} minutes",
                             "batch_id": batch["id"],
-                            "created_at": datetime.utcnow().isoformat(),
+                            "created_at": datetime.now(timezone.utc).isoformat(),
                             "is_dismissed": False
                         }
                         try:
@@ -116,7 +116,7 @@ def check_active_alerts():
                                 "severity": "ALERT",
                                 "message": alert["message"],
                                 "batch_id": batch["id"],
-                                "timestamp": datetime.utcnow().isoformat(),
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
                                 "dismissed": False,
                             }
                             sql1_db.get_client().table("alerts").insert(legacy_alert).execute()

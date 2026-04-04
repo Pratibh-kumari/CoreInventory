@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, timezone
 from app.core.database import sql1_db, sql2_db
 
 router = APIRouter()
@@ -12,7 +12,7 @@ async def health_check():
         "backend": True,
         "sql1": False,
         "sql2": False,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     
     # Check SQL_1

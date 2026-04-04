@@ -3,7 +3,7 @@ from typing import List
 from app.models.schemas import GPSUpdateRequest, GPSResponse, UserRole
 from app.core.database import sql1_db
 from app.core.dependencies import require_role
-from datetime import datetime
+from datetime import datetime, timezone
 import math
 
 router = APIRouter()
@@ -159,7 +159,7 @@ async def check_gps_alerts(gps_data: GPSUpdateRequest):
                     "severity": "WARNING",
                     "message": f"Batch {gps_data.batch_id} has stopped for over {settings.MAX_STOP_DURATION_MINUTES} minutes",
                     "batch_id": gps_data.batch_id,
-                    "created_at": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
                     "is_dismissed": False,
                 }
                 try:
@@ -170,7 +170,7 @@ async def check_gps_alerts(gps_data: GPSUpdateRequest):
                         "severity": "WARNING",
                         "message": alert["message"],
                         "batch_id": gps_data.batch_id,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "dismissed": False,
                     }
                     sql1_db.get_client().table("alerts").insert(legacy_alert).execute()
@@ -194,7 +194,7 @@ async def check_gps_alerts(gps_data: GPSUpdateRequest):
                         f"({distance_meters:.2f}m > {settings.GEOFENCE_RADIUS_METERS}m)"
                     ),
                     "batch_id": gps_data.batch_id,
-                    "created_at": datetime.utcnow().isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
                     "is_dismissed": False,
                 }
                 try:
@@ -205,7 +205,7 @@ async def check_gps_alerts(gps_data: GPSUpdateRequest):
                         "severity": "CRITICAL",
                         "message": alert["message"],
                         "batch_id": gps_data.batch_id,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "dismissed": False,
                     }
                     sql1_db.get_client().table("alerts").insert(legacy_alert).execute()

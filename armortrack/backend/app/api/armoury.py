@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from app.models.schemas import CheckoutRequest, ReturnRequest, GateAccessRequest, UserRole
 from app.core.database import sql1_db
 from app.core.dependencies import require_role
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -59,7 +59,7 @@ async def checkout_asset(
                 "previous_status": asset["status"],
                 "asset_code": asset.get("asset_code"),
             },
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
         event_response = sql1_db.get_client().table("events").insert(event_data).execute()
         if event_response.data:
@@ -124,7 +124,7 @@ async def return_asset(
                 "previous_status": "CHECKED_OUT",
                 "asset_code": asset.get("asset_code"),
             },
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
         event_response = sql1_db.get_client().table("events").insert(event_data).execute()
         if event_response.data:
@@ -210,7 +210,7 @@ async def validate_gate_access(
                 "expected_custodian": current_custodian,
                 "evaluated_by": current_user.get("user_id"),
             },
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         event_response = sql1_db.get_client().table("events").insert(event_data).execute()
@@ -237,7 +237,7 @@ async def validate_gate_access(
                 "severity": "CRITICAL",
                 "message": alert_message,
                 "asset_id": asset["id"],
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "is_dismissed": False,
             }).execute()
         except Exception:
@@ -246,7 +246,7 @@ async def validate_gate_access(
                 "severity": "CRITICAL",
                 "message": alert_message,
                 "asset_id": asset["id"],
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "dismissed": False,
             }).execute()
 

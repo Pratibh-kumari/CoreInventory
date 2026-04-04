@@ -5,7 +5,7 @@ from app.core.database import sql1_db
 from app.core.dependencies import get_current_user, require_role
 from app.core.qr_signing import sign_asset_id, verify_asset_signature, build_qr_payload
 from app.core.asset_crypto import encrypt_payload
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -43,7 +43,7 @@ def _to_asset_response(asset: dict) -> AssetResponse:
         location_name=asset.get("location_name"),
         last_serviced_at=asset.get("last_serviced_at"),
         service_interval_days=asset.get("service_interval_days", 90),
-        created_at=asset.get("created_at") or datetime.utcnow().isoformat(),
+        created_at=asset.get("created_at") or datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -272,7 +272,7 @@ async def log_asset_event(asset_id: str, event_type: str, user_id: str, metadata
             "user_id": user_id,
             "event_type": event_type,
             "metadata": metadata or {},
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
 
         response = sql1_db.get_client().table("events").insert(event_data).execute()
