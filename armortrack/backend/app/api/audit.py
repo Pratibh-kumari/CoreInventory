@@ -101,9 +101,6 @@ async def create_audit_entry(event_id: str, event_data: dict):
         
         # Build canonical payload for the audit schema.
         normalized_event_data = event_data or {}
-        event_type = normalized_event_data.get("event_type")
-        if not event_type:
-            event_type = "UNKNOWN"
 
         # Compute new hash
         event_data_json = json.dumps(normalized_event_data, sort_keys=True)
@@ -114,10 +111,6 @@ async def create_audit_entry(event_id: str, event_data: dict):
         # Insert into SQL_2 (write-only)
         audit_entry = {
             "event_id": event_id,
-            "event_type": str(event_type),
-            "asset_id": normalized_event_data.get("asset_id"),
-            "batch_id": normalized_event_data.get("batch_id"),
-            "user_id": normalized_event_data.get("user_id"),
             "event_data": normalized_event_data,
             "entry_hash": entry_hash,
             "prev_hash": previous_hash

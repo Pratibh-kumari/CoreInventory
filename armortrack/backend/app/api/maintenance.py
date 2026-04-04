@@ -116,7 +116,7 @@ async def mark_maintenance_complete(
         # Update asset
         sql1_db.get_client().table("assets") \
             .update({
-                "last_serviced_at": datetime.utcnow().isoformat(),
+                "last_serviced_at": datetime.now(timezone.utc).isoformat(),
                 "status": "WAREHOUSE_RECEIVED"
             }) \
             .eq("id", asset["id"]) \
@@ -128,7 +128,7 @@ async def mark_maintenance_complete(
             "user_id": technician_id,
             "event_type": "MAINTAINED",
             "metadata": {"notes": request.notes, "asset_code": asset.get("asset_code")},
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.now(timezone.utc).isoformat()
         }
 
         try:
