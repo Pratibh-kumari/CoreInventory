@@ -4,6 +4,19 @@
 
 ---
 
+## 📂 Repository Structure
+
+This repository contains two projects:
+
+| Project | Directory | Description |
+|---|---|---|
+| **CoreInventory** | `backend/` + `frontend/` | Node.js + Express API with vanilla HTML/CSS/JS frontend — real-time inventory management |
+| **ArmourTrack** | `armortrack/` | Python/FastAPI backend + Next.js frontend — defence-grade equipment accountability system (PS9 — DefenceTech) |
+
+See [`armortrack/README.md`](./armortrack/README.md) for ArmourTrack setup and documentation.
+
+---
+
 ## 🚀 Live Demo
 
 | Service | URL |
